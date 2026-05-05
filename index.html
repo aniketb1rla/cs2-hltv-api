@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS2 Intelligence</title>
+    <style>
+        /* Minimalist, Grid-based Design System */
+        :root {
+            --bg-color: #f9f9f9;
+            --surface-color: #ffffff;
+            --text-main: #111111;
+            --text-muted: #666666;
+            --border-color: #e5e5e5;
+            --accent: #000000;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.5;
+            padding: 4rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            margin-bottom: 4rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+        }
+
+        @media (max-width: 768px) {
+            .grid-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        h2 {
+            font-size: 1.25rem;
+            font-weight: 500;
+            margin-bottom: 2rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .card {
+            background-color: var(--surface-color);
+            border: 1px solid var(--border-color);
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            transition: transform 0.2s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            border-color: var(--text-muted);
+        }
+
+        /* News Styling */
+        .news-date {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .news-title {
+            font-size: 1.1rem;
+            font-weight: 500;
+            margin-bottom: 1rem;
+        }
+
+        /* Match Styling */
+        .match-meta {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .match-teams {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .team-vs {
+            color: var(--text-muted);
+            font-weight: 400;
+            font-size: 0.9rem;
+            margin: 0 0.5rem;
+        }
+
+        /* Crisp & Small CTAs */
+        .cta-btn {
+            display: inline-block;
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-decoration: none;
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 4px 12px;
+            border-radius: 2px;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+        }
+
+        .cta-btn:hover {
+            background-color: var(--text-main);
+            color: var(--surface-color);
+            border-color: var(--text-main);
+        }
+
+        .loading {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>CS2 Intelligence.</h1>
+    </header>
+
+    <div class="grid-container">
+        <!-- Matches Section -->
+        <section>
+            <h2>Top Matches</h2>
+            <div id="matches-container">
+                <div class="loading">Fetching live match data...</div>
+            </div>
+        </section>
+
+        <!-- News Section -->
+        <section>
+            <h2>Latest Briefs</h2>
+            <div id="news-container">
+                <div class="loading">Fetching latest intelligence...</div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // Set this to your deployed Vercel URL once you have it. 
+        // For local testing, use 'http://localhost:3000' (assuming you use `vercel dev` or node to run it)
+        const API_BASE_URL = '[https://cs2-hltv-api.vercel.app](https://cs2-hltv-api.vercel.app)'; // e.g., 'https://cs2-hltv-api.vercel.app'
+
+        async function fetchMatches() {
+            const container = document.getElementById('matches-container');
+            try {
+                // If running UI locally without a server, you need the full URL to your Vercel app.
+                // If hosting this HTML inside the same Vercel project, '/api/matches' works perfectly.
+                const response = await fetch(`${API_BASE_URL}/api/matches`);
+                const json = await response.json();
+
+                if (json.success) {
+                    container.innerHTML = ''; // Clear loading
+                    json.data.forEach(match => {
+                        const stars = '★'.repeat(match.stars) + '☆'.repeat(5 - match.stars);
+                        const matchHtml = `
+                            <div class="card">
+                                <div class="match-meta">
+                                    <span>${match.event} • ${match.format}</span>
+                                    <span>${match.time}</span>
+                                </div>
+                                <div class="match-teams">
+                                    ${match.team1} <span class="team-vs">vs</span> ${match.team2}
+                                </div>
+                                <div class="match-meta" style="margin-bottom: 1rem;">Rating: <span style="color: #000;">${stars}</span></div>
+                                <a href="https://www.hltv.org/matches/${match.match_id}/match" target="_blank" class="cta-btn">View</a>
+                            </div>
+                        `;
+                        container.innerHTML += matchHtml;
+                    });
+                }
+            } catch (error) {
+                container.innerHTML = '<div class="loading">Failed to load matches. Ensure API is running.</div>';
+            }
+        }
+
+        async function fetchNews() {
+            const container = document.getElementById('news-container');
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/news`);
+                const json = await response.json();
+
+                if (json.success) {
+                    container.innerHTML = ''; // Clear loading
+                    json.data.forEach(item => {
+                        const newsHtml = `
+                            <div class="card">
+                                <span class="news-date">${item.date}</span>
+                                <div class="news-title">${item.title}</div>
+                                <a href="${item.link}" target="_blank" class="cta-btn">Read</a>
+                            </div>
+                        `;
+                        container.innerHTML += newsHtml;
+                    });
+                }
+            } catch (error) {
+                container.innerHTML = '<div class="loading">Failed to load news. Ensure API is running.</div>';
+            }
+        }
+
+        // Initialize fetches
+        fetchMatches();
+        fetchNews();
+    </script>
+</body>
+</html>
